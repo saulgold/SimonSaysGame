@@ -1,0 +1,16 @@
+/*Hardware is set up as follows:
+  All port A pins connected to on board LEDs
+  All port B pins connected to on board buttons*/
+
+#include <hidef.h>                /* common defines and macros */
+#include "derivative.h"           /* derivative-specific definitions */
+
+void main(void) {
+
+  DDRA = 0xFF;                 /* Set up PortA as output*/
+  DDRB = 0x00;                 /* Set up PortB as input*/
+  for(;;){
+    PORTA=~PORTB;              /* Each button corresponds to an LED*/
+  }
+  
+  }
