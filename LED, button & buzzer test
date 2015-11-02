@@ -1,0 +1,99 @@
+/* Hardware set up as follows:
+All port A connected to onboard LEDS
+All port B connected to onboard buttons
+PORTE_BIT2 connected to speaker
+Seems to be a hardware fault with button PB3, so code is commented out.. */
+
+
+#include <hidef.h>            /* common defines and macros */
+#include "derivative.h"       /* derivative-specific definitions */
+
+void wait(ulong iteration){   
+	while( iteration > 0){
+		--iteration;
+	}
+	
+}
+
+unsigned long period1 = 25;
+unsigned long period2 = 27;
+unsigned long period3 = 30;
+unsigned long period4 = 40;
+unsigned long period5 = 50;
+unsigned long period6 = 60;
+unsigned long period7 = 70;
+unsigned long period8 = 80;
+
+void main(void) {
+ DDRB = 0x00;               /*port B is input*/
+ DDRA = 0xFF;               /*Port A is output*/
+ DDRE = 0b11111100;
+for(;;){
+
+  if(PORTB_BIT1==0) {
+    PORTA_BIT1=1;  
+    PORTE = 0b00000100;
+    wait(period1);
+    PORTE = 0b00000000;
+    wait(period1);
+    
+  }
+  /*if(PORTB_BIT2==0){          
+    PORTE = 0b00000100;
+    wait(period2);
+    PORTA_BIT2=1;
+    PORTE = 0b00000000;
+    wait(period2);
+  } */
+  if(PORTB_BIT3==0){
+    PORTA_BIT3=1;
+    PORTE = 0b00000100;
+    wait(period3);
+    PORTE = 0b00000000;
+    wait(period3);
+  }   
+  if(PORTB_BIT4==0){
+    PORTA_BIT4=1;
+    PORTE = 0b00000100;
+    wait(period4);
+    PORTE = 0b00000000;
+    wait(period4);    
+  }
+  if(PORTB_BIT5==0){
+    PORTA_BIT5=1;
+    PORTE = 0b00000100;
+    wait(period5);
+    PORTE = 0b00000000;
+    wait(period5);    
+  }
+  if(PORTB_BIT6==0){
+    PORTA_BIT6=1;
+    PORTE = 0b00000100;
+    wait(period6);
+    PORTE = 0b00000000;
+    wait(period6);
+  }
+  if(PORTB_BIT7==0){
+    PORTA_BIT7=1;
+    PORTE = 0b00000100;
+    wait(period7);
+    PORTE = 0b00000000;
+    wait(period7);
+  }
+  if(PORTB_BIT0==0){
+    PORTA_BIT0=1;
+    PORTE = 0b00000100;
+    wait(period8);
+    PORTE = 0b00000000;
+    wait(period8);
+  } else {
+    PORTA=0x00;
+    PORTE = 0b00000000;
+  }
+}
+
+
+ 
+  
+  
+}
