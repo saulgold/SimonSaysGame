@@ -1,0 +1,177 @@
+#include <hidef.h>      /* common defines and macros */
+#include "derivative.h"      /* derivative-specific definitions */
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+uint i;
+uint j;
+uint k;
+uint randArray[100];         /*maximum sequence*/
+uint a;
+uint b;
+uint c;
+uint d;
+uint e;
+uint f;
+uint g; 
+uint h;
+uint flashTime = 30000; 
+                                 
+uint n = 7;                     /*size of sequence*/
+uint gameArray[100];            /*an array of n-values of randArray*/
+void wait(ulong iteration)
+
+{   /*wait function to create a timer*/  
+	while( iteration > 0)
+	{
+		--iteration;
+	}
+}
+
+void main(void)
+{
+  DDRA = 0xFF;                    /*Set PORTA to output*/
+  DDRB = 0x00;                    /*set PORTB to input*/
+ 
+  
+  
+  
+ for(i=0;i<100;i++)
+ {                                
+  randArray[i]=(rand()%8);
+
+ }
+  
+ for(j=0;j<=n;j++)                 
+ {
+  gameArray[j]=randArray[j]; 
+  
+  /*if(gameArray[j]==0) {             
+         PORTA = 0x01;
+         wait(30000);
+         PORTA = 0x00;
+         
+  
+  } 
+  if(gameArray[j]==1) {
+  
+         PORTA = 0x02;
+         wait(30000);
+         PORTA = 0x00;
+         
+  } 
+  if(gameArray[j]==2) {
+         PORTA = 0x04;
+         wait(30000);
+         PORTA = 0x00;
+         
+  }
+  
+  if(gameArray[j]==3) { 
+        PORTA = 0x08;
+         wait(30000);
+         PORTA = 0x00;
+         
+  }
+  if(gameArray[j]==4) {
+        PORTA = 0x10;
+         wait(30000);
+         PORTA = 0x00;
+         
+  }
+  if(gameArray[j]==5) {
+        PORTA = 0x20;
+         wait(30000);
+         PORTA = 0x00;
+        
+  }
+   if(gameArray[j]==6) { 
+         PORTA = 0x40;
+         wait(30000);
+         PORTA = 0x00;
+   }
+   
+   if(gameArray[j]==7){
+        PORTA = 0x80;
+        wait(30000);
+        PORTA = 0x00;
+   }
+   else  {
+         PORTA = 0x00;
+         
+   }  */
+   
+   /*for(k=0;k<=7;k++){
+    printf("%lf\n", gameArray[k]);
+   }  */
+    
+  
+    
+  a = 0;
+   b = 1;
+   c = 2;
+   d = 3;
+   e = 4;
+   f = 5;
+   g = 6;
+   h = 7; 
+           
+  switch(gameArray[j]) 
+  {
+      case 0 :
+         PORTA = 0x01;
+         wait(flashTime);
+         PORTA = 0x00;
+         break;
+      case 1 :
+        PORTA = 0x02;
+         wait(flashTime);
+         PORTA = 0x00;
+         break;
+      case 2 :
+         PORTA = 0x04;
+         wait(flashTime);
+         PORTA = 0x00;
+         break;
+      case 3 :
+         PORTA = 0x08;
+         wait(flashTime);
+         PORTA = 0x00;
+         break;
+      case 4 :
+         PORTA = 0x10;
+         wait(flashTime);
+         PORTA = 0x00;
+         break;
+      case 5 :
+         PORTA = 0x20;
+         wait(flashTime);
+         PORTA = 0x00;
+         break;
+      case 6 :
+        PORTA = 0x40;
+         wait(flashTime);
+         PORTA = 0x00;
+         break;
+      case 7 :
+         PORTA = 0x80;
+         wait(flashTime);
+         PORTA = 0x00;
+         break;   
+      default:
+      PORTA=0x00;
+      break;
+  }
+  wait(flashTime);     
+ }
+
+
+
+
+  for(;;) 
+  {
+    _FEED_COP(); /* feeds the dog */
+  } /* loop forever */
+  /* please make sure that you never leave main */
+}
