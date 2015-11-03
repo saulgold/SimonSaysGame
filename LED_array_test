@@ -4,25 +4,16 @@
 #include <stdlib.h>
 #include <time.h>
 
-uint i;
-uint j;
-uint k;
+
 uint randArray[100];         /*maximum sequence*/
-uint a;
-uint b;
-uint c;
-uint d;
-uint e;
-uint f;
-uint g; 
-uint h;
-uint flashTime = 30000; 
+
+uint flashTime = 30000;      /*the time between the LED flashes*/
                                  
 uint n = 7;                     /*size of sequence*/
 uint gameArray[100];            /*an array of n-values of randArray*/
 void wait(ulong iteration)
 
-{   /*wait function to create a timer*/  
+{                               /*wait function to create a timer*/  
 	while( iteration > 0)
 	{
 		--iteration;
@@ -37,87 +28,17 @@ void main(void)
   
   
   
- for(i=0;i<100;i++)
- {                                
+ for(i=0;i<100;i++)               /*creates a pseudo random array of size 100 where each bit is between 0 and 7*/
+ {                                /*'real' random algorithms will be used eventually*/
   randArray[i]=(rand()%8);
 
  }
   
- for(j=0;j<=n;j++)                 
+ for(j=0;j<=n;j++)                /*this for loop adds the first n values of randArray to gameArray*/        
  {
   gameArray[j]=randArray[j]; 
-  
-  /*if(gameArray[j]==0) {             
-         PORTA = 0x01;
-         wait(30000);
-         PORTA = 0x00;
-         
-  
-  } 
-  if(gameArray[j]==1) {
-  
-         PORTA = 0x02;
-         wait(30000);
-         PORTA = 0x00;
-         
-  } 
-  if(gameArray[j]==2) {
-         PORTA = 0x04;
-         wait(30000);
-         PORTA = 0x00;
-         
-  }
-  
-  if(gameArray[j]==3) { 
-        PORTA = 0x08;
-         wait(30000);
-         PORTA = 0x00;
-         
-  }
-  if(gameArray[j]==4) {
-        PORTA = 0x10;
-         wait(30000);
-         PORTA = 0x00;
-         
-  }
-  if(gameArray[j]==5) {
-        PORTA = 0x20;
-         wait(30000);
-         PORTA = 0x00;
-        
-  }
-   if(gameArray[j]==6) { 
-         PORTA = 0x40;
-         wait(30000);
-         PORTA = 0x00;
-   }
-   
-   if(gameArray[j]==7){
-        PORTA = 0x80;
-        wait(30000);
-        PORTA = 0x00;
-   }
-   else  {
-         PORTA = 0x00;
-         
-   }  */
-   
-   /*for(k=0;k<=7;k++){
-    printf("%lf\n", gameArray[k]);
-   }  */
-    
-  
-    
-  a = 0;
-   b = 1;
-   c = 2;
-   d = 3;
-   e = 4;
-   f = 5;
-   g = 6;
-   h = 7; 
            
-  switch(gameArray[j]) 
+  switch(gameArray[j])            /*switch statement assigns an LED to the 0-7 values*/
   {
       case 0 :
          PORTA = 0x01;
@@ -163,7 +84,7 @@ void main(void)
       PORTA=0x00;
       break;
   }
-  wait(flashTime);     
+  wait(flashTime);                          /*the time between the LED flashes*/
  }
 
 
