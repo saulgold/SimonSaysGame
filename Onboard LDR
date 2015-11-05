@@ -1,0 +1,59 @@
+#include <hidef.h>      /* common defines and macros */
+#include "derivative.h"      /* derivative-specific definitions */
+
+void wait(ulong iteration){
+	while( iteration > 0){
+		--iteration;
+	}
+}
+
+ void ATD_Init(void)
+{
+	ATDCTL2 = 0x80;
+	/* 1 - ATD power down*/
+	/* 0 - ATD fast flag clear*/
+	/* 0 - ATD power down in wait mode*/
+	/* 0 - External trigger level/edge control*/
+	/* 0 - External trigger polarity*/
+	/* 0 - External trigger mode enable*/
+	/* 0 - ATD sequence complete interrupt enable*/
+	/* 0 - ATD sequence complete interrupt flag*/
+
+	ATDCTL3 = 0b00001000;
+	/* 0 - reserved*/
+	/* 0001 - Conversion sequence length = 1, conversions per sequence = 1*/
+	/* 0 - Result register FIFO mode*/
+	/* 00 - Background Debug Freeze Enable*/       
+
+	ATDCTL4 = 0b11100000;
+	/* 1 - A/D resolution select - 8bit*/
+	/* 11 - Sample time select - 16 A/D conversion clock periods*/
+	/* 00000 - ATD clock prescaler*/
+	/* bus clock 8MHz, PRS = 0*/           
+	/* ATD clock = BusClk/(PRS + 1)*0.5 = 2MHz*/  
+
+}
+
+
+
+void main(void) {
+    volatile unsigned int atd_value;
+    ATD_Init();    /*initialise the A/D*/
+    DDRA = 0xFF;
+    PORTA = 0x00;
+   
+   
+    for(;;){
+    
+    ATDCTL5 = 0x84;             /*Start of conversion; channel AN5*/
+      
+    
+    while (ATDSTAT0_SCF == 0);        /* Wait for the conversion to be complete */
+    atd_value = ATDDR0L;
+    PORTA = atd_value;
+ 
+   
+    
+    }
+    
+}
