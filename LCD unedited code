@@ -1,0 +1,268 @@
+; Include derivative-specific definitions
+            INCLUDE 'derivative.inc'
+            XREF MCU_init
+
+; export symbols
+            XDEF Entry, _Startup, main
+            ; we use export 'Entry' as symbol. This allows us to
+            ; reference 'Entry' either in the linker .prm file
+            ; or from C/C++ later on
+
+            XREF __SEG_END_SSTACK      ; symbol defined by the linker for the end of the stack
+
+; variable/data section
+MY_EXTENDED_RAM: SECTION
+; Insert here your data definition.
+LCDBUF      ds.b 1
+
+; code section
+MyCode:     SECTION
+
+WR  EQU $20
+RS  EQU $40
+EN  EQU $80
+;
+; LCD prompt message string
+LCD_PROMPT1:
+  FCC "Turn on"
+  FDB $0
+LCD_PROMPT2:
+  FCC "Switch 1";
+  FDB $0
+;
+main:
+_Startup:
+Entry:
+            LDS  #__SEG_END_SSTACK     ; initialize the stack pointer
+            ; Call generated Device Initialization function
+            CALL    MCU_init
+
+LCD_TST:
+          jsr    INIT_SPI         ; set up Spi
+          jsr    LCD_INIT         ; initialize LCD 
+
+          LDX	#LCD_PROMPT1	  ; point at messAGE FOR LCD
+        	jsr	LCDSTR		    ; send lcd message
+          LDAA  #$C0        ; set LCD cursor to 2nd line
+          jsr LCD_CMD       ; send command
+          jsr DELAY10M      ; delay for cursor move
+          LDX #LCD_PROMPT2  ; send 2nd line data
+          jsr LCDSTR        ; send
+
+
+; test loop, wait here if this is all the code.
+LCD_LP:
+          nop
+          bra LCD_LP
+          
+          
+; If keypad or other character is to be sent to the LCD,
+; Apply the LCD_OUT routine with ASCII character in the "A" register. 
+;
+
+; Apply LCD_CLR to clear LCD display and hoen the cursor.
+; Set Cursor position may be written to LCD with a LCD_CMD sequence also.  
+
+
+; Simple Serial Driver initialization...
+INIT_SPI:
+;             Enable SPI
+       movb  #$5E,SPICR1    ; Setup SPI 
+       movb  #$10,SPICR2    ; enable /SS OUTPUT BUFFER ENABLE
+       movb  #$02,SPIBR     ; set up Spi baud clock rate
+       clr   WOMM 
+       movb  #0,SPISR 
+       LDAB  SPISR
+       CLR   LCDBUF
+       JSR   LCD_SEND
+       rts
+           ;
+; Lcd Setup , 4 bit wide
+LCD_INIT:
+          bclr    LCDBUF,RS+EN       ; select lcd commands Cs=0 En=0
+          jsr     LCD_SEND
+; set LCD to 4 bit input mode 
+          jsr      DELAY50M         ; delay
+          ldaa     #$03            ; send 3
+          jsr      LCD_WR_4         
+          jsr      DELAY50M         ; delay
+          ldaa     #$03
+          jsr      LCD_WR_4         ; send 3
+          jsr      DELAY50M
+          ldaa     #$03
+          jsr      LCD_WR_4         ; send 3
+          jsr      DELAY50M
+          ldaa     #$02
+          jsr      LCD_WR_4         ; send 2
+          jsr      DELAY50M
+; write  $2c, in 4 bit mode
+          ldaa     #$2c
+          jsr      LCD_CMD         ; write command
+          jsr      DELAY10M         ; delay
+;                  
+; write $06, in 4 bit mode
+          ldaa     #$06
+          jsr      LCD_CMD          ; send command
+          jsr      DELAY10M            ; delay
+;                  
+; write $14 in 4 bit mode
+          ldaa     #$0e
+          jsr      LCD_CMD          ; send command
+          jsr      DELAY10M            ; delay
+;                 
+; write $01 in 4 bit mode, Clear LCD and and home cursor 
+LCD_CLR:
+          ldaa     #$01
+          jsr      LCD_CMD          ; send command
+          jsr      DELAY20M         ; delay
+          ldaa     #$80
+          jsr      LCD_CMD          ; send command
+          jsr      DELAY10M         ; delay
+;
+; Reset Lcd states to rest
+          ldaa    #$00            ; turn all signals off on lcd
+          staa    LCDBUF           ; save states
+          jsr     LCD_SEND         ; send signals
+          rts
+;
+; Lcd Send
+LCD_SEND:
+         ldaa    LCDBUF                 ; load data & signals
+         jsr     SS_IO                  ; send to lcd
+         rts
+
+; Lcd Out Write a byte
+LCD_OUT:
+      bset  LCDBUF,RS   ; select lcd data buffer
+      jsr   LCD_WR_8    ; write byte
+    	rts
+;
+;
+; Send a String to the LCD
+; Index register is loaded with address of string.
+; continue until reading a zero.
+LCDSTR:
+        pshb             ; save b
+        ldab    #$03     ; select lcd buffer
+        ldaa    0,x      ; load byte from string
+        beq     LSE      ; if zero then end
+        pshx             ; save x
+        jsr     LCD_OUT  ; send character to lcd
+        pulx              ; restore x
+        inx
+        pulb             ; restore b
+        bra     LCDSTR
+LSE     ldaa    #$20     ; add space
+        jsr     LCD_OUT
+        pulb             ; restore b
+        rts
+
+;
+; Lcd Write 4 bit Data , lower 4 bits of acc A
+; Bit assignment
+;      0 = Lcd-Db4       4 = 
+;      1 = Lcd-Db5       5 = WR
+;      2 = Lcd-Db6       6 = EN
+;      3 = Lcd=Db7       7 = RS
+LCD_WR_4:
+         pshy
+         psha                       ; save value
+         ldy      #LCDBUF
+         ldaa     0,y              ; load Lcd buffer
+         anda     #$f0             ; get only controls signals
+         pulb                      ; get data
+         andb     #$0f             ; only bits 0-3 are data
+         aba
+         staa     0,y              ; save data & lcd signals
+         bclr     0,y,EN           ; enable low
+
+         jsr      LCD_SEND         ; send the data
+         bset     0,y,EN           ; enable high
+         jsr      LCD_SEND
+         bclr     0,y,EN           ; enable low
+         jsr      LCD_SEND
+         puly
+         rts
+
+; Lcd Write 8 bit Data , lower 4 bits first in acc A
+LCD_WR_8:
+         psha                     ; save a 
+         lsra                     ; shift upper 4 bits to lower
+         lsra
+         lsra
+         lsra
+         jsr      LCD_WR_4        ; write upper 4 bits to lcd
+         pula
+         jsr      LCD_WR_4         ; write lower 4 bits to lcd
+         rts
+;
+;
+; Lcd Command
+LCD_CMD:
+        bclr   LCDBUF,RS   ; select lcd command buffer
+        jsr    LCD_WR_8     ; wait
+        rts
+
+; Delay routines
+;
+;
+; Generate a 50 ms delay
+DELAY50M:
+          pshx
+          ldx  #49998      ; delay 50,000 usecs,
+          jsr  DELML01     ; call usec delay
+          pulx
+          rts
+;
+;
+; Generate a 20 ms delay
+DELAY20M:
+          jsr  DELAY10M
+          jsr  DELAY10M
+          rts
+;
+; Generate a 10 ms delay
+DELAY10M:
+                           ; jsr=4cyles
+          pshx             ; 2 cycles ,save x
+          ldx  #9998       ; 2 cycles,delay 9998 usec + 2 for this routine
+          jsr  DELML01     ; call usec delay, this delay offset in sub
+          pulx             ; 3 cycles restore x
+          rts              ; 5 cycles
+;
+;
+; Generate a 1 ms delay
+DELAY1MS:
+                           ; jsr=4cyles
+          pshx             ; 2 cycles ,save x
+          ldx  #998       ; 2 cycles,delay 9998 usec + 2 for this routine
+          jsr  DELML01     ; call usec delay, this delay offset in sub
+          pulx             ; 3 cycles restore x
+          rts              ; 5 cycles
+;
+; 8 cycles = 1 usec e = 8mhz
+DELML01:
+          nop              ; 1 cycle
+          nop              ; 1 cycle
+          nop              ; 1 cycle
+          nop              ; 1 cycle
+          dex              ; 1 cycle 
+          bne   DELML01    ; 3 cycles
+
+          rts              ; 5 cycles
+;
+;-------------------------------------------------
+; Simple Serial Driver (SPI), source code...
+; Acc A is send serially, msb first
+; return received in Acc A
+SS_IO:
+       jsr  DELAY1MS
+	     LDAB	SPISR	     ; CLEAR STATUS OF SPI
+       STAA	SPIDR	     ; SEND / RECEIVE BYTE
+SS_IO_LP:		
+       LDAB SPISR      ; Get the status
+       BPL  SS_IO_LP	 ; WAIT IF NO FLAG: 0x80
+       ldaa SPIDR     ; read receive value
+ 	     rts
+
+
