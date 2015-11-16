@@ -1,0 +1,18 @@
+/****************************************************************************************
+ *                                                                                        *
+ *          Function Name:         toneButton                                             *
+ *          Function Arrguments:   one arrgument of type uchar                            *
+ *          Description:       Generate tones using buzzer acorrding to the period value  *
+ *                             to be used inside a loop.                                  *
+ *                                                                                        *
+ *****************************************************************************************/
+
+void tone(uchar period){
+
+  PORTE = 0b00000100;
+  wait(period);
+  PORTE = 0b00000000;
+  wait(period);
+
+  }
+
