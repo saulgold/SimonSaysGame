@@ -1,0 +1,418 @@
+/*********************************************************************
+*Author: 		Laetitia Bushiri  K                                      *
+*	        	Meram Salih       K1433412                               *
+*      	    Saul Gold         K                                      *
+*                                                                    *
+*		                                                                 *
+*		                                                                 *
+*                                                                    *
+*     Title: 	"Simon said" Memory game                               *
+*                                                                    *
+*    Module: Control Systems with Embedded Implementation            *
+*                                                                    *
+*                                                                    *
+*      Description:The game consists on challenging our memory       *
+*                  retention capacity by generating a growing        *
+*                  sequence of events,an LED sequence that the       *
+*                  player has to repeat on the same order.The game   *
+*                  starts with one LED and continues by adding or    *
+*                  repeating new LEDs that the player has to repeat  *
+*                  until he/she makes a mistake or runs out of a     *
+*                  set time.                                         *
+*       Specifications:switch sw1 enables/disables the game          *
+*                      LED.. provides game ON/OFF indication         *
+*                      LED0-LED7 display the sequence                *
+*                      PP0-PP7 provide user input                    *
+*                                                                    *
+*                                                                    *
+*                                                                    *
+*         Date starteted: 	..../10/2015                             *
+*         Date completed: .....	/11/2015                             *
+*********************************************************************/                           
+
+
+#include <hidef.h>                                        /* common defines and macros */
+#include "derivative.h"                                   /* derivative-specific definitions */
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+/**********************************************************Global Varibles Section **************************************************************************************/
+
+uchar randArray[100];                                     /*this array holds the random sequence , 100 is the maximum sequence length*/
+
+uchar flashTime = 150;                                     /*the time between the LED flashes*/
+uchar i;
+uchar j;
+                                 
+uchar n;                                                  /*length of sequence at a spesific time durring the game*/
+uint RandomSeed=0;
+uchar gameArray[100];                                     /*an array that holds n-values of randArray at level n,100 is the maximum sequence length*/
+uchar UserInput[100] ;                                     /* an array that holds user inputs,100 is the maximum sequence length */
+
+unsigned char period1 = 25;                              /*The period1-8 are used to produce different tones when a push bottun is pressed */
+unsigned char period2 = 27;
+unsigned char period3 = 30;
+unsigned char period4 = 40;
+unsigned char period5 = 50;
+unsigned char period6 = 60;
+unsigned char period7 = 70;
+unsigned char period8 = 80;
+unsigned int sequenceSpeed = 30000;                     /*the wait time between flashing any two element in the sequence */
+unsigned char userLose;                                 /*this varible indicates wither or not the user input matches the game sequence*/
+
+
+/***************************************************************Functions ********************************************************************************************************/
+
+
+
+ /****************************************************************************************
+ *                                                                                        *
+ *         Function Name:  wait                                                           *
+ *         Function Arrguments:  one arrgument of type unsigned int                       *
+ *         Description: Thins function produces a delay in proprtion to input arrgument.  *
+ *                                                                                        *
+ *                                                                                        *
+ *                                                                                        *
+ *****************************************************************************************/
+void wait(ulong iteration)
+
+{                                 
+	while( iteration > 0)
+	{
+		--iteration;
+	}
+}
+
+
+/****************************************************************************************
+ *                                                                                        *
+ *          Function Name:         tone                                                   *
+ *          Function Arrguments:   one arrgument of type uchar                            *
+ *          Description:       Generate tones using buzzer acorrding to the period value  *
+ *                                                                                        *
+ *                                                                                        *
+ *                                                                                        *
+ *****************************************************************************************/
+
+void tone(uchar period){
+uint k;
+  for(k=0; k<flashTime;k++){
+    
+    PORTE = 0b00000100;
+    wait(period);
+    PORTE = 0b00000000;
+    wait(period);
+  }
+}
+  
+/****************************************************************************************
+ *                                                                                        *
+ *          Function Name:         toneButton                                             *
+ *          Function Arrguments:   one arrgument of type uchar                            *
+ *          Description:       Generate tones using buzzer acorrding to the period value  *
+ *                             to be used inside a loop.                                  *
+ *                                                                                        *
+ *****************************************************************************************/
+
+void toneButton(uchar period){
+
+  PORTE = 0b00000100;
+  wait(period);
+  PORTE = 0b00000000;
+  wait(period);
+
+  }
+  
+void main(void)
+{
+/**********************************************************Bord inilization Section******************************************************************/
+ 
+    DDRA = 0xFF;                                           /*Set PORTA to output*/
+    DDRB = 0x00;                                          /*set PORTB to input*/
+    DDRE = 0b11111100;                                    /*PORT E bits 0 and 1 kept as input becasue they cannot be changed, buts 2 - 7 changed to outputs*/
+    TSCR1=0x80;                                           /*enable timer */ 
+    TSCR2=0x05;                                           /* no interrupt, prescaler=32  (see section ()) */
+    
+    
+/****************************************************Game loop****************************************************************************************/
+    for(;;)
+    {
+ 
+        while(PORTE_BIT0 == 1)                               /*only run code when on/off switch is ON*/
+        {   
+        
+            wait(20000);  
+
+            RandomSeed=TCNT;                                /* Read the value at the 16-bit timer counter register*/
+            srand(RandomSeed);                              /* use TCNT as a random seed for the random generator*/
+            userLose = 0;                                   /*if userLose equals 1 then the user has lost*/
+            while(userLose!=1)                               /*stay in this loop as long as the user does not inter an incorrect sequence */
+            {
+   
+                for(i=0;i<100;i++)                          /*creates a pseudo random array of size 100 where each bit is between 0 and 7*/
+                {                                
+                     randArray[i]=(rand()%8);
+
+                 }
+                 for(n=0;n<=99;n++){                        /*loop that changes the level*/
+ 
+/********************************************start of computer output*********************************************************/
+ 
+                 wait(10000);
+  
+                 for(j=0;j<=n;j++)                           /*this for loop adds the first n values of randArray to gameArray*/        
+                 {
+                        gameArray[j]=randArray[j]; 
+                        switch(gameArray[j])                 /*switch statement assigns an LED to the 0-7 values*/
+                        {
+                               case 0 :
+                               PORTA = 0x01;
+                               tone(period1);
+                               PORTA = 0x00;
+                               break;
+                               case 1 :
+                               PORTA = 0x02;
+                               tone(period2);
+                               PORTA = 0x00;
+                               break;
+                               case 2 :
+                               PORTA = 0x04;
+                               tone(period3);
+                               PORTA = 0x00;
+                               break;
+                               case 3 :
+                               PORTA = 0x08;
+                               tone(period4);
+                               PORTA = 0x00;
+                               break;
+                               case 4 :
+                               PORTA = 0x10;
+                               tone(period5);
+                               PORTA = 0x00;
+                               break;
+                               case 5 :
+                               PORTA = 0x20;
+                               tone(period6);
+                               PORTA = 0x00;
+                               break;
+                               case 6 :
+                               PORTA = 0x40;
+                               tone(period7);
+                               PORTA = 0x00;
+                               break;
+                               case 7 :
+                               PORTA = 0x80;
+                               tone(period8);
+                               PORTA = 0x00;
+                               break;   
+                               default:
+                               PORTA=0x00;
+                               break;
+                      }
+                      wait(sequenceSpeed);                          /*the time between the LED flashes*/
+               }
+/*************************************************end of computer output***************************************************************************/
+ 
+/***************************************************start of userInput code*************************************************************************/
+  
+              for(j=0;j<= n ; ) 
+              {
+                   
+                   switch(PORTB)                                          /*switch statement assigns an LED to the 0-7 values*/
+                   {
+                             case 0b11111110 :
+                                   UserInput[j]=0;
+                                   for(;;)
+                                   {
+                                        toneButton(period1);
+                                        PORTA = 0x01;
+                                        if(PORTB!=0b11111110)
+                                        {
+                                            break;
+                                        }
+                                        
+                                        
+                                   }
+                                   if(UserInput[j]!=gameArray[j]){
+                                        userLose = 1;
+                                        break;                                        
+                                        }
+                                   j++;
+                                   break;
+                             case 0b11111101:
+                                  UserInput[j]=1;
+                                  for(;;)
+                                  {
+                                         toneButton(period2);
+                                         PORTA = 0x02;
+                                         if(PORTB!=0b11111101)
+                                         {
+                                             break;
+                                         }
+                                         
+                                         }
+                                         if(UserInput[j]!=gameArray[j]){
+                                         userLose = 1;
+                                         break;
+                                   }
+                                   j++;
+                                   break;
+                             case 0b11111011 :
+                                  UserInput[j]=2;
+                                  for(;;)
+                                  {
+                                         toneButton(period3);
+                                         PORTA = 0x04;
+                                         if(PORTB!=0b11111011)
+                                         {
+                                              break;
+                                         }
+                                         
+                                         }
+                                         if(UserInput[j]!=gameArray[j]){
+                                         userLose = 1;
+                                         break;
+                                         
+                                   }
+                                  j++;
+                                  break;           
+                             case 0b11110111 :
+                                  UserInput[j]=3;
+                                  for(;;)
+                                  {
+                                         toneButton(period4);
+                                         PORTA = 0x08;
+                                         if(PORTB!=0b11110111)
+                                         {
+                                                break;
+                                         }
+                                        
+                                  }
+                                   if(UserInput[j]!=gameArray[j]){
+                                         userLose = 1;
+                                         break;
+                                         }
+                                  j++;
+                                  break;
+                             case 0b11101111 :
+                                  UserInput[j]=4;
+                                  for(;;)
+                                  {
+                                        toneButton(period5);
+                                        PORTA = 0x10;
+                                        if(PORTB!=0b11101111)
+                                        {
+                                              break;
+                                        }
+                                        
+                                  }
+                                  if(UserInput[j]!=gameArray[j]){
+                                        userLose = 1;
+                                        break;
+                                        }
+                                  j++;
+                                  break;
+                             case 0b11011111 :
+                                  UserInput[j]=5;
+                                  for(;;)
+                                  {
+                                        toneButton(period6);
+                                        PORTA = 0x20;
+                                        if(PORTB!=0b11011111)
+                                        {
+                                             break;
+                                        }
+                                        
+                                   }
+                                   if(UserInput[j]!=gameArray[j]){
+                                        userLose = 1;
+                                        break;
+                                        }
+                                   j++;
+                                   break;
+                             case  0b10111111:
+                                   UserInput[j]=6;
+                                   for(;;)
+                                   {
+                                      toneButton(period7);
+                                      PORTA = 0x40;
+                                      if(PORTB!=0b10111111)
+                                      {
+                                            break;
+                                      }
+                                     
+                                    }
+                                     if(UserInput[j]!=gameArray[j]){
+                                         userLose = 1;
+                                         break;
+                                         }
+                                    j++;
+                                    break;
+                             case 0b01111111 :
+                                  UserInput[j]=7;
+                                  for(;;)
+                                  {
+                                       toneButton(period8);
+                                       PORTA = 0x80;
+                                       if(PORTB!=0b01111111)
+                                       {
+                                            break;
+                                        }
+                                        
+                                  }
+                                  if(UserInput[j]!=gameArray[j]){
+                                        userLose = 1;
+                                        break;
+                                        }
+                                  j++;
+                                  break;   
+                            default:
+                                  PORTA=0x00;
+                                  
+                            wait(5000);
+                                  
+                                 
+                                  
+                   }                                      /*end of switch statement*/
+                
+                     
+                 if(userLose == 1){
+                  break;
+                 }
+                    
+                   /*check timer here*/
+                
+            } 
+             PORTA=0x00;
+             wait(5000);
+/************************************************************end of userInput code*********************************************************************/
+  
+
+           
+           
+           
+           
+     if(userLose==1)
+     { 
+           wait(9000);
+           
+           for(i=0;i<5;i++){                      /*flash all LEDs 5 times if user loses*/
+            
+            PORTA=0xFF;
+            wait(5000);
+            PORTA=0x00;
+            wait(5000);
+           
+           }
+           
+           wait(9000);                            
+           break;
+     }
+     }                                              /*and now we're in the for loop that changes the level*/
+
+    }                                              /*end of while userLose loop*/
+  }                                               /*end of while switch is on*/
+ }                                               /* end of forever loop*/
+
+  
+}
