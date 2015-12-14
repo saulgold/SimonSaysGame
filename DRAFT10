@@ -40,7 +40,7 @@
 #include <MC9S12C128.h>
 /**********************************************************Global Varibles Section **************************************************************************************/
 
-uchar randArray[100];                                    /*this array holds the random sequence , 100 is the maximum sequence length*/
+uchar RandArray[100];                                    /*this array holds the random sequence , 100 is the maximum sequence length*/
 
 uchar flashTime = 150;                                   /*the time between the LED flashes*/
 uchar i;
@@ -143,7 +143,7 @@ void toneButton(uchar period){
  {
     for(j=0;j<=n;j++)                           /*this for loop adds the first n values of randArray to gameArray*/        
                  {
-                        GameArray[j]=randArray[j]; 
+                        GameArray[j]=RandArray[j]; 
                         switch(GameArray[j])                 /*switch statement assigns an LED to the 0-7 values*/
                         {
                                case 0 :
@@ -491,7 +491,7 @@ void main(void)
    
                 for(i=0;i<100;i++)                                         /*creates a pseudo random array of size 100 where each bit is between 0 and 7*/
                 {                                
-                     randArray[i]=(rand()%8);
+                     RandArray[i]=(rand()%8);
 
                  }
                  for(n=0;n<=99;n++)
@@ -589,6 +589,3 @@ interrupt 6 void IRQ_ISR(void)
    
 }
 
-#pragma CODE_SEG DEFAULT
-Status API Training Shop Blog About Pricing
-© 2015 GitHub, Inc. Terms Privacy Security Contact Help
